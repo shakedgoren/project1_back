@@ -17,25 +17,29 @@ class Books(db.Model):
     author=db.Column(db.String(50))
     published_year=db.Column(db.Integer)
     book_type=db.Column(db.Integer)
+    bstatus=db.Column(db.Boolean)
 
     loan_books = db.relationship('Loans', backref='books_d')
-    def __init__(self,book_name,author,published_year,book_type):
+    def __init__(self,book_name,author,published_year,book_type,bstatus):
         self.book_name=book_name
         self.author=author
         self.published_year=published_year
         self.book_type=book_type
+        self.bstatus=bstatus
 
 class Customers(db.Model):
     id = db.Column('Customers_id',db.Integer, primary_key=True)
     customers_name=db.Column(db.String(50))
     age=db.Column(db.Integer)
     city=db.Column(db.String(50))
+    cstatus=db.Column(db.Boolean)
 
     loan_customers = db.relationship('Loans', backref='customers_d')
-    def __init__(self,customers_name,age,city):
+    def __init__(self,customers_name,age,city,cstatus):
         self.customers_name=customers_name
         self.age=age
         self.city=city
+        self.cstatus=cstatus
 
 class Loans(db.Model):
     id = db.Column('Loans_id',db.Integer, primary_key=True)
@@ -51,7 +55,9 @@ class Loans(db.Model):
         self.start=start
         self.end=end
         self.returned=returned
-  
+
+#   ------------- BOOKS = CRUD -------------
+
 @app.route("/Books",methods=['GET','POST'])
 @app.route("/Books/<id>",methods=['DELETE','PUT'])
 def crud_b(id=-1):
@@ -61,14 +67,15 @@ def crud_b(id=-1):
         author =request_data['author']
         published_year =request_data['published_year']
         book_type =request_data['book_type']
-        newbook =Books(book_name,author,published_year,book_type)
+        bstatus=True
+        newbook =Books(book_name,author,published_year,book_type,bstatus)
         db.session.add(newbook)
         db.session.commit()
         return []
     if request.method == 'GET':
         response=[]
         for b in Books.query.all():
-            response.append({'id':b.id,'book_name':b.book_name,'author':b.author,'published_year':b.published_year,'book_type':b.book_type})
+            response.append({'id':b.id,'book_name':b.book_name,'author':b.author,'published_year':b.published_year,'book_type':b.book_type, 'bstatus':b.bstatus})
         return(json.dumps(response))
     if request.method == 'PUT':
         put_book=Books.query.get(id)
@@ -84,6 +91,18 @@ def crud_b(id=-1):
         db.session.commit()
         return{}
 
+@app.route("/Books/returend/<id>",methods=['PUT'])
+def crud_br(id=-1):
+    if request.method == 'PUT':
+            put_book=Books.query.get(id)
+            request_data=request.get_json()
+            put_book.bstatus=request_data['bstatus']
+            db.session.commit()
+            return{}
+
+#   ------------- CUSTOMERS = CRUD -------------
+
+
 @app.route("/Customers",methods=['GET','POST'])
 @app.route("/Customers/<id>",methods=['DELETE','PUT'])
 def crud_c(id=-1):
@@ -92,14 +111,15 @@ def crud_c(id=-1):
         customers_name=request_data['customers_name']
         age=request_data['age']
         city=request_data['city']
-        newbook=Customers(customers_name,age,city)
+        cstatus=True
+        newbook=Customers(customers_name,age,city,cstatus)
         db.session.add(newbook)
         db.session.commit()
         return []
     if request.method == 'GET':
         response=[]
         for c in Customers.query.all():
-            response.append({'id':c.id,'customers_name':c.customers_name,'age':c.age,'city':c.city})
+            response.append({'id':c.id,'customers_name':c.customers_name,'age':c.age,'city':c.city, 'cstatus':c.cstatus})
         return(json.dumps(response))
     if request.method == 'PUT':
         put_customers=Customers.query.get(id)
@@ -113,6 +133,17 @@ def crud_c(id=-1):
         db.session.delete(Customers.query.get(id))
         db.session.commit()
         return{}
+
+@app.route("/Customers/returend/<id>",methods=['PUT'])
+def crud_cr(id=-1):
+    if request.method == 'PUT':
+            put_cus=Customers.query.get(id)
+            request_data=request.get_json()
+            put_cus.cstatus=request_data['cstatus']
+            db.session.commit()
+            return{}
+
+#   ------------- LOANS = CRUD -------------
 
 @app.route("/Loans",methods=['GET','POST'])
 @app.route("/Loans/<id>",methods=['DELETE','PUT'])
